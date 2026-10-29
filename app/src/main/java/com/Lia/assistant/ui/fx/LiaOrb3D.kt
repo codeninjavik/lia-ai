@@ -35,6 +35,9 @@ import com.Lia.assistant.ui.theme.LocalNovaColors
 import com.Lia.assistant.ui.theme.LocalNovaReducedMotion
 import com.Lia.assistant.voice.NovaOrbState
 
+// Oppo/MediaTek GPU drivers crash with native SIGSEGV on RuntimeShader — keep disabled.
+private val agslAvailable: Boolean = false
+
 private const val AGSL_ORB_SHADER = """
     uniform float2 iResolution;
     uniform float iTime;
@@ -120,7 +123,7 @@ fun LiaOrb3D(
     style: NovaOrbStyle = NovaOrbStyle.NOVA,
     assistantName: String = "Lia"
 ) {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+    if (!agslAvailable || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
         NovaOrb(
             state = state,
             modifier = modifier,

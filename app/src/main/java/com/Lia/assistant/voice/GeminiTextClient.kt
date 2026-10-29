@@ -42,7 +42,7 @@ object GeminiTextClient {
         try {
             internalHttpClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
-                    val fallback = "models/gemini-1.5-flash"
+                    val fallback = "models/gemini-2.0-flash"
                     cachedResolvedModel = fallback
                     return fallback
                 }
@@ -74,20 +74,27 @@ object GeminiTextClient {
                         if (lowerName.contains("flash") &&
                             !lowerName.contains("live") &&
                             !lowerName.contains("image") &&
-                            !lowerName.contains("tts")
+                            !lowerName.contains("tts") &&
+                            !lowerName.contains("native-audio")
                         ) {
-                            flashCandidate = name
-                            break
+                            // Prefer gemini-2.0 or newer over older models
+                            if (flashCandidate == null ||
+                                (lowerName.contains("2.0") || lowerName.contains("2.5")) &&
+                                !flashCandidate!!.lowercase().contains("2.0") &&
+                                !flashCandidate!!.lowercase().contains("2.5")
+                            ) {
+                                flashCandidate = name
+                            }
                         }
                     }
                 }
 
-                val chosen = flashCandidate ?: anyGenerateCandidate ?: "models/gemini-1.5-flash"
+                val chosen = flashCandidate ?: anyGenerateCandidate ?: "models/gemini-2.0-flash"
                 cachedResolvedModel = chosen
                 return chosen
             }
         } catch (_: Exception) {
-            val fallback = "models/gemini-1.5-flash"
+            val fallback = "models/gemini-2.0-flash"
             cachedResolvedModel = fallback
             return fallback
         }
@@ -107,7 +114,7 @@ object GeminiTextClient {
 
         val modelName = runCatching {
             kotlinx.coroutines.runBlocking { resolveModel(apiKey) }
-        }.getOrDefault("models/gemini-1.5-flash")
+        }.getOrDefault("models/gemini-2.0-flash")
 
         val modelEndpoint = if (modelName.startsWith("models/")) modelName else "models/$modelName"
         val url = "https://generativelanguage.googleapis.com/v1beta/$modelEndpoint:generateContent?key=$apiKey"
